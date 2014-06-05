@@ -1,0 +1,129 @@
+# STAT 327/692 Homework 2
+We'll grade your homework by
+* opening your "hw2.Rmd" file in RStudio
+* clicking "Knit HTML"
+* reading the HTML output
+* reading your "hw2.Rmd"
+
+You should write R code anywhere you see an empty R code chunk. You
+should write English text anywhere you see "...".
+
+Include reasonable titles and labels with each of your graphs.
+
+Name: Mona Jalal  
+
+Email: jalal@wisc.edu
+
+First, we need the `knitr` package. If loading it with `require()`
+fails, then install it and load it. Then we load the package "MASS",
+which contains the "Boston" data frame. (There's nothing for you to do
+here.)
+```{r}
+if (!require("knitr")) {
+  install.packages("knitr") # do this once per lifetime
+  require("knitr") # do this once per session
+}
+require("MASS")
+```
+
+### Run "?Boston" (outside this R Markdown document) to read the help page for the "Boston" data frame.
+
+### Convert the "chas" variable to a factor with labels "off" and "on" (referring to the Charles river).
+```{r}
+Boston$chas<-factor(Boston$chas, labels=c("Off", "On"))
+```
+
+### How many rows are in the Boston data frame? How many columns?
+```{r}
+ rows=dim(Boston)[1]
+ cat(rows)
+ cols=dim(Boston)[2]
+ print(cols)
+```
+
+### What does a row represent?
+Each row shows a neighborhood/tract per se!
+### What does a column represent?
+Columns from left to right show per capita crime rate by town, proportion of residential land zoned for lots over 25,000 sq.ft.,proportion of non-retail business acres per town,Charles River dummy variable (= 1 if tract bounds river; 0 otherwise), nitrogen oxides concentration (parts per 10 million), average number of rooms per dwelling, proportion of owner-occupied units built prior to 1940, weighted mean of distances to five Boston employment centres, index of accessibility to radial highways, full-value property-tax rate per \$10,000, pupil-teacher ratio by town, 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town, lower status of the population (percent) and median value of owner-occupied homes in \$1000 respectively.
+
+### Make a density plot of tax rates. Add the data points to the plot via the function call, `rug(Boston$tax)`. (I neglected to include `rug()` in the handout.)
+```{r}
+plot(density(Boston$tax))
+rug(Boston$tax, col=2, lwd=3.5)
+```
+### Describe the shape of the distribution of tax rates.
+It's a bimodal distribution with two different modes (peaks). It has two distinct peaks (local maxima) in the PDF (probability density function).So the distribution appears to be bimodal with the main peak at around 290 and a lower peak around 670 and the spread of the peak around the main mode is wider than that around the smaller mode.
+Also the rug function is projecting the points on x-axis!
+One additional idea for the general problem of showing the number of points is using a rug plot (rug function), this places small tick marks along the margin that can show how many points contribute
+Those red marks we've got using rug are the actual data values; each red mark is one observation (akin to the marks you see with stripchart(Boston$tax,pch="|")). 
+
+### Note that the distribution shape doesn't make sense in light of the rug representation of the data. Make a histogram of the tax rates.
+
+```{r}
+hist(Boston$tax)
+rug(Boston$tax, col=2, lwd=3.5)
+```
+
+### Why is the second peak of the density plot so large? In what way is the rug representation of the data inadequate? Write a line or two of code to figure it out, and then explain it.
+
+
+```{r}
+plot(density(Boston$tax))
+rug(jitter(Boston$tax, amount = 50), col=2, lwd=.5)
+
+```
+The position of the rug is not good. using jitter we can somehow fix it.Standard approach is to add some noise to the data before plotting. R has a function jitter() which does exactly that. You could use it to add the necessary noise to the coordinates in your plot. For the example plot direct jittering or alpha blending is probably best, but in some other cases the rug plot can be useful.
+
+
+### Make a barplot of "chas".
+```{r}
+table(Boston$chas)
+barplot(table(Boston$chas),axis.lty=1)
+```
+
+### How many neighborhoods are on the Charles river?
+```{r}
+Boston$count <- 1
+aggregate(count ~chas, data=Boston, FUN=length)
+agg_chas<-aggregate(count ~chas, data=Boston, FUN=length)
+(agg_chas[[2]][2])
+
+
+```
+
+### Make a single graph consisting of three plots: 
+* a scatterplot of "nox" on the y-axis vs. "dis" on the x-axis 
+* a boxplot of "nox"" left of the scatterplot's y-axis
+* a boxplot of "dis"" below the scatterplot's x-axis
+
+Hint: use `layout()` with a 4x4 matrix, using the top-right 3x3 corner
+for the scatterplot, leaving the bottom-left 1x1 corner blank, and
+using the other parts for the boxplots.
+
+(An optional challenge, worth 0 extra credit points: remove the axis
+and plot border from each boxplot.)
+```{r}
+plot_matrix <- matrix(1:3, 3, 3)
+plot_matrix <- rbind(cbind(0, plot_matrix), 0)
+layout(plot_matrix)
+layout.show(plot_matrix)
+plot(density(Boston$tax))
+rug(jitter(Boston$tax, amount = 50), col=2, lwd=.5)
+hist(Boston$tax)
+rug(jitter(Boston$tax, amount = 50), col=2, lwd=.5)
+barplot(table(Boston$chas),axis.lty=1)
+rug(jitter(Boston$tax, amount = 50), col=2, lwd=.5)
+```
+
+## Extra credit (2 points; not required)
+### Look into the highest-crime neighborhood:
+* find the row number, r, of the neighborhood with the highest "crim".
+* make a density plot of "crim". Include a rug to show the data.
+* add a red circle at (x, y) = (max crime rate, 0) to make this maximum crime rate stand out.
+
+# make a density plot with rug of "medv"", adding a red circle at (x, y) = (medv[r], 0) to see what medv corresponds to the highest crime rate.
+# repeat the last step for ptratio.
+```{r}
+```
+### What do you notice about the ptratio and medv for the highest-crime neighborhood?
+...

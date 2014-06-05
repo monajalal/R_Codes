@@ -1,0 +1,297 @@
+```{r knitr_options, echo=FALSE}
+opts_chunk$set(fig.align='center', fig.path='hw1/', warning=FALSE, message=FALSE, echo=TRUE)
+```
+
+# HOMEWORK #1
+
+* Due date: Tuesday, 4/22, at midnight.
+* You can get the `.Rmd` of this file [here](http://pages.stat.wisc.edu/~gvludwig/327-5/hw1.Rmd)
+* What to send: submit your `.Rmd` file only. Make sure it produces any figures and results you need to report correctly. 
+* Assume the data files are in the same directory, or use the links provided (either choice is fine). Do not point to personal directories.
+* Feel free to use and/or modify the `gr.descent()` function implemented in my notes. Note question 3 requires the `optimize()` function, which I will teach next Thursday.
+* Note that the robust methods are implemented in the `MASS` package (function `rlm()`) and the exponential smoothing is in the function (`HoltWinters()`). You can check these functions to verify if your code is doing fine <b>but I will not accept them as solutions to the questions below</b>. You should code the procedures.
+* My solution to the homework is roughly 100 lines long, but some problems are hard. I advise you to start early.
+
+## Q1 : Multicollinearity
+
+Consider the following dataset, a collection of cigarettes with their respective amounts of Tar, Nicotine and Weight:
+
+```{r}
+cigarettes <- read.table("http://pages.stat.wisc.edu/~gvludwig/327-5/cigarettes.dat", row.names = 1)
+names(cigarettes) <- c("Tar", "Nicotine", "Weight", "CO")
+cigarettes
+```
+
+The source of this dataset is a paper from the [Journal of Statistics Education](http://www.amstat.org/publications/jse/datasets/cigarettes.txt). It illustrates the problem of multicollinearity, namely, when the covariates have a strong linear relationship between themselves, which causes issues in the estimation of Least Squares coefficients (there's a leverage point too, but you can keep it). The response variable is the amount of carbon monoxide in the smoke of the cigarette, in the column `CO` of the dataframe.
+
+```{r echo=FALSE}
+plot(cigarettes)
+
+```
+
+Write down answers for each of the following questions, as well as code pieces whenever necessary:
+
+a. Write R code that calculates the correlations between `CO` and each of the columns `Tar`, `Nicotine` and `Weight`, and show them.
+
+
+```{r}
+(cor(cigarettes$CO, cigarettes$Tar))
+(cor(cigarettes$CO, cigarettes$Nicotine))
+(cor(cigarettes$CO, cigarettes$Weight))
+```
+the results show that the correlation between CO and Tar is really high meaning that they have linear relation. The same about CO and Nicotine. However correlation between CO and Weight is low and means they don't obey each other in linear fashion. It is obeying our expectaions as in plot.
+
+b. Write R code that fits a linear model of `CO` explained by `Tar`, `Nicotine` and `Weight`. Do the coefficients estimated correspond to your expectations? Extract the model matrix from your linear model, and save it in a variable `X`. What can you comment about the form of the `t(X)%*%X` cross product?
+
+```{r}
+fit.model=lm(formula = CO ~ ., data = cigarettes)
+summary(fit.model)
+plot(fit.model)
+X=model.matrix(fit.model)
+str(X)
+(result=t(X) %*% X)
+(mat.solve=solve(t(X)%*%X))
+
+(XbyX <- crossprod(X))
+
+```
+Well, somehow no because I didn't expect to have a linear realtion between CO and weight. CrossProduct gives the mixed 2nd moments of pairs of features. For instance, the Tar-Tar coefficient gives the empirical estimate of 𝔼(Tar2), whereas Tar-Nicotine coefficients gives the estimate for 𝔼(Tar∗Nicotine)The cross product is useful in computing the regressor vector under the least square fit: R=((XtX)^−1*)(Xty), where y is the response (label) vector. Also the assumption is that the independent variables are to be considered random and the error is that sums of products and cross-products estimate expectations, which they do not.
+
+c. Fit a model that explains `CO` by `Tar` and `Weight`. How did the model change? Does your interpretation of the coefficients remain the same?
+
+```{r}
+fit.model2=lm(formula = CO ~ Tar+Weight, data = cigarettes)
+plot(fit.model2)
+abline(fit.model2)
+coeffs2=fit.model2$coefficients
+print(coeffs2)
+```
+As expected we see that the abline (regression line) for relation of CO based on Tar and Weight is not linear and is quadratic. 
+
+d. Fit a model that explains `CO` by `Nicotine` and `Weight`. How did the model change? Does your interpretation of the coefficients remain the same?
+```{r}
+fit.model3=lm(formula = CO ~ Nicotine+Weight, data = cigarettes)
+plot(fit.model3)
+abline(fit.model3)
+coeffs3=fit.model3$coefficients
+print(coeffs3)
+```
+As expected we see that the abline (regression line) for relation of CO based on Nicotine and Weight is not linear and is quadratic.
+
+## Q2 : Robust Regression
+
+Consider the dataset we constructed in the previous module, which has the Land and Farm area in square miles for all states in the USA.
+
+```{r}
+farmland <- read.csv("http://pages.stat.wisc.edu/~gvludwig/327-5/FarmLandArea.csv")
+str(farmland)
+plot(farm~land,data=farmland)
+```
+
+We want to build a regression model for `farm`, explained by `land`. But we know Alaska is an outlier (and Texas a leverage point). An alternative to fitting a least squares line is to fit a line based on Tukey's $\rho$ norm, that is, finding the parameters that minimize
+
+\[
+MMSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^n \rho(y_i - \beta_0 - \beta_1 x_i)
+\]
+
+where $\rho(t)$ is given by
+
+\[
+\rho(t) = \begin{cases}
+t^2, &  |t| \leq k \\
+2 k |t| - k^2, &  |t| > k
+\end{cases}
+\]
+
+Note that
+
+\[
+\rho\prime(t) = \begin{cases}
+2 t, &  |t| \leq k \\
+2 k \, \mbox{sign}(t), &  |t| > k
+\end{cases}
+\]
+
+Which means
+
+\[
+\frac{\partial}{\partial \beta_0} MMSE(\beta_0,\beta_1) = - \frac{1}{n} \sum_{i=1}^n \rho\prime (y_i - \beta_0 - \beta_1 x_i)
+\]
+\[
+\frac{\partial}{\partial \beta_1} MMSE(\beta_0,\beta_1) = - \frac{1}{n} \sum_{i=1}^n x_i \rho\prime (y_i - \beta_0 - \beta_1 x_i)
+\]
+
+a. Create a scatterplot of `farm` vs. `land`. Include the least squares regression line.
+
+```{r}
+fit=lm(farm~land,data=farmland)
+abline(fit) #lease square regression line
+abline(rlm(farm~land,data=farmland),col="red")
+
+```
+
+b. Fix $k=19000$. Estimate $\beta_0$, $\beta_1$ using gradient descent, for initial value `c(3500,0.33)` (which is really close to the truth). Try a small step size too, say `0.0001`. Does your algorithm converge? Set `verbose=TRUE` to follow the solution.
+
+```{r}
+gr.descent <- function(der_f, x0, alpha=0.0001, eps=0.001, max.it = 50, verbose = FALSE){
+  X1 <- x0
+  cond <- TRUE
+  iteration <- 0
+  if(verbose) cat("X0 =",X1,"\n")
+  while(cond){
+    iteration <- iteration + 1
+    X0 <- X1
+    X1 <- X0 - alpha * der_f(X0)
+    cond <- sum((X1 - X0)^2) > eps & iteration < max.it
+    if(verbose) cat(paste(sep="","X",iteration," ="), X1, "\n")
+  }
+  print("mona")
+  print(X1)
+  return(X1)
+}
+
+k=19000
+
+rho<-function(t,k) ifelse(abs(t)<=k,t^2,(2*k*abs(t))-k^2)
+rho.prime<-function(t,k) ifelse (abs(t)<=k,2*t,(2*k*sign(t)))
+
+dMMSE <- function(b,k=19000, y=farmland$farm, x=farmland$land){
+  
+  n = length(y)
+  a=0
+  d=0
+  for (i in 1:n) {
+
+    a = a + rho.prime(y[i]-b[1]-b[2]*x[i],k)
+    d = d + x[i]*rho.prime(y[i]-b[1]-b[2]*x[i],k)
+  }
+  a <- (-a/n)
+  d <- (-d/n)
+  return(c(a,d))
+}
+
+grd1=gr.descent(dMMSE, c(3500,0.33),alpha=0.0001, verbose=TRUE)
+(beta0=grd1[1])
+(beta1=grd1[2])
+
+
+
+```
+
+cWe see that it doesn't converge and switches values between numbers.. Modify your gradient descent algorithm so at each step, the parameter $\alpha$ decreases by half, i.e. $\alpha_k = \alpha_{k-1}/2$. Use $\alpha_1 = 0.1$. Does your algorithm converge now? What happens if you use the least squares estimates for your initial values, instead of the values `c(3500,0.33)`?
+
+```{r}
+
+gr.descent2 <- function(der_f,x0, alpha=0.1, eps=0.001, max.it = 50, verbose = FALSE){
+  X1 <- x0
+  cond <- TRUE
+  iteration <- 0
+  if(verbose) cat("X0 =",X1,"\n")
+  while(cond){
+    iteration <- iteration + 1
+    X0 <- X1
+    X1 <- X0 - alpha * der_f(X0)
+    alpha <- alpha/2
+    cond <- sum((X1 - X0)^2) > eps & iteration < max.it
+    if(verbose) cat(paste(sep="","X",iteration," ="), X1, "\n")
+  }
+  print("mona2")
+  print(X1)
+  return(X1)
+}
+grd2=gr.descent2(dMMSE, c(3500,0.33),alpha=0.1, verbose=TRUE)
+
+(beta0=grd2[1])
+(beta1=grd2[2])
+```
+Yes, it converges to ~3579.5715724
+d. Fix $k=19000$. Estimate $\beta_0$, $\beta_1$ using gradient descent, for your choice of parameters from item b (i.e. `c(3500,0.33)` as initial value, and step size of $\alpha=0.1$, decreasing by half at each iteration. Include the robust line in the previous plot, in a different color (you might want to repeat the plot here). Also include the robust estimate using the least squares coefficients as initial points. Use a different color. Include a `legend()`.
+
+e. Create a plot of your $\rho$ function (using `curve()`). Do you have an intuition of why this robust line is less influenced by the outliers in the data?
+
+
+```{r}
+plot(farm~land,data=farmland)
+curve(rho(x,k=19000),xlim=c(-10,10),col="blue", add="TRUE")
+
+```
+It is less influenced because we are using MMSE.
+## Q3 : Exponential smoothing
+
+Consider the `nhtemp` dataset which holds yearly average measurements of temperature for New Hampshire, from 1912 to 1971
+
+```{r}
+require(datasets)
+str(nhtemp)
+```
+
+We want to fit an exponential smoothing model to this data, in which
+
+\[ 
+\hat{Y}_i = \beta Y_{i-1} + (1-\beta) \hat{Y}_{i-1}
+\]
+
+Set $\hat{Y}_2 = \hat{Y}_1 = Y_1$ for simplicity sake. We will choose the parameter estimate $\hat{\beta}$ that minimizes the mean forecast error
+
+\[
+FE(\beta) = \frac{1}{n} \sum_{i=2}^n \left( Y_i - \hat{Y}_i \right)^2
+\]
+
+The derivatives of this function are rather complicated (note $\hat{Y}_i$ is a function of $\beta$), so let's use a derivative-free method based on the function `optimize()`.
+
+a. Using `optimize()` on the interval $[0,1]$, find the value of $\beta$ that produces the minimum forecast error. Set $\hat{Y}_2 = \hat{Y}_1 = Y_1$ for simplicity.
+```{r}
+require(datasets)
+data(nhtemp)
+str(nhtemp)
+
+y.hat<-function(beta,y=nhtemp){
+  y.hat=numeric(length(y))
+  y.hat[1]=y[1]
+  y.hat[2]=y[2]
+  for (i in 3:length(y))
+  {
+    y.hat[i]=beta*y[i-1]+(1-beta)*y.hat[i-1]
+  }
+  return(y.hat)
+  
+}
+mona.function <- function(beta, y=nhtemp){
+  n<-length(y)
+  y.hat.value<-y.hat(beta,nhtemp)
+  sq.sum=0
+  for (i in 2:n)
+  {
+    sq.sum = sq.sum + (y[i]-y.hat.value[i])^2
+    
+  }
+  return(sq.sum/n)
+}
+
+opt.result=optimize(mona.function, c(0,1), maximum=FALSE)
+(y.hat.value=y.hat(opt.result$minimum,nhtemp))
+```
+
+b. Plot the yearly average measurements of temperature for New Hampshire, from 1912 to 1971, and overlay an exponential smoothing of it using `lines()` (use a different color).
+
+```{r}
+plot(nhtemp)
+lines(ts(y.hat.value, start = start(nhtemp)[1], end = end(nhtemp)[1]), col = "red")
+```
+c. Reproduce the previous plot, but include some other levels of smoothing, say $\beta=0.1$ and $\beta=0.9$. Use different colors and include a legend.
+```{r}
+plot(nhtemp)
+lines(ts(y.hat.value, start = start(nhtemp)[1], end = end(nhtemp)[1]), col = "red")
+
+beta=0.1
+y.hat.value<-y.hat(beta,nhtemp)
+lines(ts(y.hat.value, start = start(nhtemp)[1], end = end(nhtemp)[1]), col = "green")
+
+beta=0.9
+y.hat.value<-y.hat(beta,nhtemp)
+lines(ts(y.hat.value, start = start(nhtemp)[1], end = end(nhtemp)[1]), col = "blue")
+
+legend('bottomright', c("nhtemp","min.Beta","Beta=0.1","Beta=0.9") , col=c('black', 'red', 'green','blue'), cex=1.0,pch=15)
+
+```
+
