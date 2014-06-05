@@ -1,191 +1,121 @@
+# You should replace all occurrences of "..." with your
+# code. If you'd like to replace a single "..." with more
+# than one line of code (using your own variables), you may
+# certainly do that. Please don't remove all my comments, as they
+# help orient us when we're reading your code.
+#
+# My solution to this homework uses information from the first two
+# handouts and the Vector portion of the third handout.
+#
+# We'll grade your homework by running this ".R" file via
+#   source("hw1.R")
+# (in a directory containing the data files) and reading your code.
+
 # Name: Mona Jalal
 # Email: jalal@wisc.edu
 
-# We'll grade your homework by running
-#   source("hw1.R")
-# in a directory containing your "hw1.R" file, by running other test
-# cases on your code, and by reading your code.
+rm(list = ls()) # Remove all objects defined in workspace.
+
+# Download WI_donations and NY_donations from the class website. (Do
+# this outside of R. They are donations from Wisconsin and New York to
+# the 2012 presidential candidates. I got them from files at
+# www.fec.gov/disclosurep/PDownload.do, a Federal Election Commission
+# website.)
+
+
+# Read these two files into two vectors, one for each state.
+x<-scan("NY_tiny.txt")
+y<-scan("WI_tiny.txt")
+
+x<-scan("NY_donations.txt")
+y<-scan("WI_donations.txt")
+
+# Find the sum of donations from WI and the sum of donations from NY.
+
+#NY.sum=sum(x,na.rm = FALSE)
+#WI.sum=sum(y,na.rm = FALSE)
+
+cat(sep="", "WI sum=", WI.sum, "\n")
+cat(sep="", "NY sum=", NY.sum, "\n")
+
+# Find the sum of small donations from each state. I've set small=100
+# (below). Let's say "small donation" are those such that
+#   -100 <= donation <= 100.
+# (Note that there are negative donations, which are refunds.)
+
+#small = 100
+
+WI.sum.small = sum(y[(y <= 100) & (y >= -100)],na.rm=TRUE) # ... set this variable correctly
+NY.sum.small = sum(x[(x <= 100 ) & (x >= -100)],na.rm=TRUE) # ... set this variable correctly
+
+cat(sep="", "WI.sum.small=", WI.sum.small, "\n")
+cat(sep="", "NY.sum.small=", NY.sum.small, "\n")
+
+# Find the sum of big donations from each state. Let's say "big
+# donations" are those such that
+#   donation < -100 or donation > 100.
+
+
+
+WI.sum.big = sum(y[(y > 100 )| (y < -100)] ,na.rm=TRUE) # ... set this variable correctly
+NY.sum.big = sum(x[(x > 100 )| (x < -100)],na.rm=TRUE) # ... set this variable correctly
+cat(sep="", "WI.sum.big=", WI.sum.big, "\n")
+cat(sep="", "NY.sum.big=", NY.sum.big, "\n")
+
+# Find the ratio of the sum of small donations to total donations from
+# each state.
+WI.small.ratio = WI.sum.small/WI.sum # ... set this variable correctly
+NY.small.ratio = NY.sum.small/NY.sum  # ... set this variable correctly
+cat(sep="", "WI.small.ratio=", WI.small.ratio, "\n")
+cat(sep="", "NY.small.ratio=", NY.small.ratio, "\n")
+
+# Find the mean positive donation from each state. (Do not include
+# negative donations.)
+NY.positive=x[x>0]
+WI.positive=y[y>0]
+WI.mean.pos = mean(WI.positive) # ... set this variable correctly
+NY.mean.pos = mean(NY.positive) # ... set this variable correctly
+cat(sep="", "WI.mean.pos=", WI.mean.pos, "\n")
+cat(sep="", "NY.mean.pos=", NY.mean.pos, "\n")
+
+# Find the median positive donation from each state. (Do not include
+# negative donations.)
+WI.median.pos =median(WI.positive)  # ... set this variable correctly
+NY.median.pos =median(NY.positive) # ... set this variable correctly
+cat(sep="", "WI.median.pos=", WI.median.pos, "\n")
+cat(sep="", "NY.median.pos=", NY.median.pos, "\n")
+
+# Find the largest and second-largest donation from each state. Write
+# code to produce formatted output exactly like this (except that the
+# numbers should be correct, not 0):
 #
-# Implement the following functions by replacing "..." with your own
-# code. While your functions should pass the test cases, below, we'll
-# also try them with different test cases.
+# WI.largest=0, WI.second.largest=0
+# NY.largest=0, NY.second.largest=0
+
+WI_sorted=sort(y)
+WI_sorted.length=length(y)
+WI_largest_donation=WI_sorted[WI_sorted.length]
+WI_second_largest_donation=WI_sorted[WI_sorted.length-1]
+cat(sep="", "WI.largest=",WI_largest_donation, ", ","WI.second.largest=",WI_second_largest_donation,"\n")
+
+
+NY_sorted=sort(x)
+NY_sorted.length=length(x)
+NY_largest_donation=NY_sorted[NY_sorted.length]
+NY_second_largest_donation=NY_sorted[NY_sorted.length-1]
+cat(sep="", "NY.largest=",NY_largest_donation, ", ","NY.second.largest=",NY_second_largest_donation,"\n")
+
+
+# ...
+
+# Note that your code should work on the current data set, and also on
+# a new data set. For example, if I ask for a sum, don't use "17",
+# even if the sum is 17, because 17 will probably be wrong for a new
+# data set. Instead, use sum(...), since this second solution will be
+# correct even for a new data set.
 #
-# Hint: if you have a bug, study a single test case that manifests it.
-
-rm(list = ls())
-
-# Description: convert fahrenheit temperature to celsius.
-# Usage: celsius(fahrenheit)
-# Arguments:
-#   fahrenheit: the temperature in degrees Fahrenheit
-# Value: the equivalent temperature in degrees Celsius
-celsius = function(fahrenheit) {
-  return((fahrenheit-32)*(5/9))
-}
-stopifnot(isTRUE(all.equal(celsius(32), 0)))
-stopifnot(isTRUE(all.equal(celsius(212), 100)))
-
-# Write a function "sign.string()" with an integer
-# parameter, n, that returns one of the character strings,
-#   "negative"
-#   "zero"
-#   "positive"
-# according to the sign of n.
-sign.string = function(n) {
-  if (n>0)
-    string="positive"
-  else if (n<0)
-    string="negative"
-  else
-    string="zero"
-  return(string)
-}
-stopifnot(sign.string(-2) == "negative")
-stopifnot(sign.string( 0) == "zero")
-stopifnot(sign.string( 3) == "positive")
-
-# Write a function "letter.grade()" with a numeric argument,
-# score, that returns a character (string) letter grade
-# according to this scale:
-#   score             grade
-#   [90, 100]         "A"
-#   [80,  90)         "B"
-#   [70,  80)         "C"
-#   [60,  70)         "D"
-#   [ 0,  60)         "F"
-#   outside [0, 100]  NULL
-# (The notation "[80, 90)" refers to the set of scores such
-# that 80 <= score < 90. 80 is included, but not 90.)
-#
-# Use "if ... else if ... else".
-letter.grade = function(score) {
-  if (score>=90 & score<=100)
-    letter="A"
-  else if (score>=80 & score<90)
-    letter="B"
-  else if (score>=70 & score<80)
-    letter="C"
-  else if (score>=60 & score<70)
-    letter="D"
-  else if (score>=0 & score<60)
-    letter="F"
-  else
-    letter=NULL
-  return(letter)
-  # ...
-}
-stopifnot(letter.grade(100) == "A")
-stopifnot(letter.grade( 95) == "A")
-stopifnot(letter.grade( 90) == "A")
-stopifnot(letter.grade( 89.99) == "B")
-stopifnot(letter.grade( 80) == "B")
-stopifnot(letter.grade( 75) == "C")
-stopifnot(letter.grade( 60) == "D")
-stopifnot(letter.grade( 40) == "F")
-stopifnot(is.null(letter.grade( -3))) # "... == NULL" doesn't do the right thing
-
-# Write a function "discriminant()" that takes three numeric parameters,
-# a, b, and c, and returns b^2 - 4ac.
-discriminant = function(a, b, c) {
-  return((b^2)-(4*a*c))
-}
-stopifnot(isTRUE(all.equal(discriminant(0, 0,  0), 0)))
-stopifnot(isTRUE(all.equal(discriminant(0, 0,  1), 0)))
-stopifnot(isTRUE(all.equal(discriminant(0, 1,  0), 1)))
-stopifnot(isTRUE(all.equal(discriminant(0, 1,  1), 1)))
-stopifnot(isTRUE(all.equal(discriminant(1, 0,  0), 0)))
-stopifnot(isTRUE(all.equal(discriminant(1, 0,  1), -4)))
-stopifnot(isTRUE(all.equal(discriminant(1, 1,  1), -3)))
-stopifnot(isTRUE(all.equal(discriminant(1, -1,  -1), 5)))
-stopifnot(isTRUE(all.equal(discriminant(-1, -1,  -1), -3)))
-
-# Write a function "quadratic.formula()" with three numeric
-# parameters, a, b, and c. Its return value is as follows:
-#
-# If a is 0, return NULL. ("0x^2 + bx + c" isn't a quadratic
-# equation.)
-#
-# If there are no real-number solutions (because the discriminant
-# is negative), return a numeric vector of length 0. (Use your
-# discriminant() function to find the discriminant.)
-# 
-# Otherwise return a vector of the two (possibly identical)
-# solutions. If the two solutions are different, the smaller
-# solution should be first in the vector.
-
-quadratic.formula = function(a, b, c) {
-  if (a==0){
-    output=NULL
-  } else if (discriminant(a,b,c) <0){
-    output=numeric(0)
-  } else {
-    output=c( (-b-sqrt(discriminant(a,b,c)))/(2*a), (-b+sqrt(discriminant(a,b,c)))/(2*a))
-  }
-  return(output)   
-}
-stopifnot(isTRUE(all.equal(quadratic.formula(0, 0,  0), NULL)))
-stopifnot(isTRUE(all.equal(quadratic.formula(1, 0,  1), numeric(0))))
-stopifnot(isTRUE(all.equal(quadratic.formula(1, 0, -1), c(-1, 1))))
-stopifnot(isTRUE(all.equal(quadratic.formula(1, 0, -4), c(-2, 2))))
-stopifnot(isTRUE(all.equal(quadratic.formula(2, 0, -8), c(-2, 2))))
-stopifnot(isTRUE(all.equal(quadratic.formula(1, 5,  6), c(-3,-2))))
-stopifnot(isTRUE(all.equal(quadratic.formula(1, 1, -6), c(-3, 2))))
-
-
-
-# Description: baby.prop.test performs a z-test and computes a
-#   confidence interval for an unknown proportion.
-# Usage: baby.prop.test(x, n, p, conf.level = .95)
-# Parameters:
-#   x: the number of successes in a sample (must be in [0, n])
-#   n: the sample size (must be greater than 0)
-#   p: the hypothesized true proportion (must be in [0, 1]) 
-#   conf.level: confidence level of the interval (must be in (0, 1))
-# Details: The test is for the null hypothesis that the true proportion
-#   is p against the alternative that it isn't p. The statistic is
-#     z = (p.hat - p) / sqrt(p*(1-p)/n),
-#   where
-#     p.hat = x / n
-#   Note: This z is approximately N(0,1) under the null hypothesis.
-#   The interval is
-#     p.hat +/- z_{alpha/2} * sqrt(p.hat*(1-p.hat)/n),
-#   where alpha = 1 - conf.level.
-# Value: a list containing these components:
-#   $statistic: the z statistic
-#   $p.value: probability of a z-statistic more extreme than the one computed
-#   $conf.int: a confidence interval for the true proportion using
-#     confidence level conf.level
-#   $estimate: the estimated (sample) proportion, p.hat
-#   $null.value: the specifited hypothesized value of the proportion, p
-#
-# (You may not use the real prop.test() or chisq.test() or related
-# functions. Use stopifnot() to check the arguments according to the
-# "must" statements above.)
-#
-baby.prop.test = function (x, n, p, conf.level = 0.95) {
-  stopifnot(n> 0)
-  stopifnot(x>0 && x<n)
-  stopifnot(p>=0 && p<=1 )
-  stopifnot(conf.level>0 && conf.level<1)
-  test<-list()
-  p.hat = x / n
-  alpha=1-conf.level
-  z = (p.hat - p) / sqrt(p*(1-p)/n)
-  p.value=2*(1-pnorm(z,0,1))
-  #CI=c(p.hat + z_{alpha/2} * sqrt(p.hat*(1-p.hat)/n), p.hat - z_{alpha/2} * sqrt(p.hat*(1-p.hat)/n))
-  CI=c(p.hat - (abs(qnorm(alpha/2))) * sqrt(p.hat*(1-p.hat)/n),p.hat + (abs(qnorm(alpha/2))) * sqrt(p.hat*(1-p.hat)/n))
-  
-  test$null.value<-p
-  test$estimate<-p.hat
-  test$statistics<-z
-  test$p.value<-p.value
-  test$conf.int<-CI
-  return(test)
-}
-# test case
-baby.prop = baby.prop.test(72, 100, .7, conf.level=.99)
-stopifnot(isTRUE(all.equal(as.numeric(baby.prop$statistic), .43643578)))
-stopifnot(isTRUE(all.equal(as.numeric(baby.prop$p.value), .66252058)))
-stopifnot(isTRUE(all.equal(as.numeric(baby.prop$conf.int), c(.60434555, .83565445))))
-stopifnot(isTRUE(all.equal(as.numeric(baby.prop$estimate), .72)))
-stopifnot(isTRUE(all.equal(as.numeric(baby.prop$null.value), .7)))
+# I recommend checking that your code works on the files WI_tiny and
+# NY_tiny, which are fake data files for which you can check your
+# computations by hand. Get your code working on them, and then switch
+# to the real data files specified above. Your submitted code should
+# use the real files, "WI_donations" and "NY_donations".

@@ -1,4 +1,8 @@
 baby.prop.test = function (x, n, p, conf.level = 0.95) {
+  stopifnot(n> 0)
+  stopifnot(x>0 && x<n)
+  stopifnot(p>=0 && p<=1 )
+  stopifnot(conf.level>0 && conf.level<1)
   test<-list()
   p.hat = x / n
   alpha=1-conf.level
